@@ -1,10 +1,9 @@
 # A file containing the version number of the current xia2. Generally useful.
 
-
 import os
 
 
-def get_git_revision(fallback="not set"):
+def get_git_revision(fallback):
     """Try to obtain the current git revision number
     and store a copy in .gitversion"""
     version = None
@@ -18,25 +17,25 @@ def get_git_revision(fallback="not set"):
             try:
                 import subprocess
 
-                def get_stdout(*popenargs, **kwargs):
-                    """Run command with arguments and return stdout as a string.
-                    Backported from Python 2.7 subprocess.check_output."""
-                    with open(os.devnull, "w") as devnull:
-                        process = subprocess.Popen(
-                            stdout=subprocess.PIPE, *popenargs, stderr=devnull, **kwargs
-                        )
-                        output = process.communicate()[0]
-                        assert not process.poll()
-                        return output.rstrip().decode("latin-1")
-
-                version = get_stdout(["git", "describe", "--long"], cwd=xia2_path)
+                process = subprocess.run(
+                    ("git", "describe", "--long"),
+                    cwd=xia2_path,
+                    encoding="latin-1",
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL,
+                )
+                version = process.stdout.rstrip()
                 if version[0] == "v":
                     version = version[1:].replace(".0-", ".")
                 try:
-                    branch = get_stdout(
-                        ["git", "describe", "--contains", "--all", "HEAD"],
+                    process = subprocess.run(
+                        ("git", "describe", "--contains", "--all", "HEAD"),
                         cwd=xia2_path,
+                        encoding="latin-1",
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.DEVNULL,
                     )
+                    branch = process.stdout.rstrip()
                     if (
                         branch != ""
                         and branch != "master"
@@ -48,22 +47,17 @@ def get_git_revision(fallback="not set"):
                 with open(version_file, "w") as gv:
                     gv.write(version)
             except Exception:
-                if version == "":
-                    version = None
+                pass
 
         # 2. If .git directory or git executable missing, read .gitversion
-        if (version is None) and os.path.exists(version_file):
+        if not version and os.path.exists(version_file):
             with open(version_file) as gv:
                 version = gv.read().rstrip()
     except Exception:
         pass
 
-    if version is None:
-        version = fallback
-
-    return str(version)
+    return str(version or fallback)
 
 
 VersionNumber = get_git_revision("0.7.0")
-Version = "XIA2 %s" % VersionNumber
-Directory = "xia2-%s" % VersionNumber
+Version = f"XIA2 {VersionNumber}"
