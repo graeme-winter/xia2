@@ -33,14 +33,18 @@ setup(
     keywords="xia2",
     name="xia2",
     packages=find_packages(),
-    package_dir={"xia2": "../xia2"},
+    package_dir={"xia2": "xia2"},
     data_files=[
         ("xia2", ["XIA2Version.py", "__init__.py", "libtbx_refresh.py", "conftest.py"])
     ],
+    entry_points={
+        "console_scripts": ["xia2.asdf=dials_data.cli:main"],
+        "libtbx.dispatcher.script": ["xia2.asdf=xia2.asdf"],
+    },
     setup_requires=setup_requirements,
     test_suite="tests",
     tests_require=test_requirements,
     url="https://github.com/xia2/xia2",
-    version="0.6.476",
+    version="0.7.1",
     zip_safe=False,
 )
